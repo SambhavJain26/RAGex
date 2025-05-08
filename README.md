@@ -20,7 +20,7 @@ RAGex is a RAG-Powered Multi-Agent Q&A Assistant that retrieves relevant informa
 
 ```bash
 git clone https://github.com/SambhavJain26/RAGex.git
-cd RAGEX
+cd RAGex
 ```
 
 ### 2. Create Virtual Environment (Optional)
