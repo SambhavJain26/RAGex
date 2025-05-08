@@ -100,6 +100,4 @@ python pipeline.py
 * `requirements.txt` - Project dependencies.
 * `.env` - Environment file for API keys and Flask secret.
 
-## License
 
-This project is licensed under the MIT License.
