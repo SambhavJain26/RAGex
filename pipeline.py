@@ -59,12 +59,26 @@ vectorstore = Chroma.from_documents(
 )
 
 llm = ChatOpenAI(model_name=MODEL, temperature=0.7)
-memory = ConversationBufferMemory(memory_key='chat_history', return_messages=True)
+memory = ConversationBufferMemory(memory_key='chat_history', return_messages=True, output_key='answer')
 retriever = vectorstore.as_retriever(search_kwargs={"k": 3})      # retrieves the top 3 chunks
+
+# Modified to expose the retrieved documents
+def get_context_str_and_docs(query):
+    docs = retriever.get_relevant_documents(query)
+    context_snippets = []
+    for i, doc in enumerate(docs):
+        source = doc.metadata.get("source", "Unknown")
+        doc_type = doc.metadata.get("doc_type", "Unknown")
+        snippet = f"[{i+1}] From {doc_type}/{os.path.basename(source)}:\n{doc.page_content[:200]}..."
+        context_snippets.append(snippet)
+    return "\n\n".join(context_snippets), docs
+
+# creating the rag pipeline using langchain
 rag_chain = ConversationalRetrievalChain.from_llm(
     llm=llm,
     retriever=retriever,
-    memory=memory
+    memory=memory,
+    return_source_documents=True,  
 )
 
 def calculator_tool(expr: str) -> str:
@@ -87,8 +101,6 @@ def calculator_tool(expr: str) -> str:
     except Exception as e:
         return f"Calculation error: {e}"
 
-
-
 def dictionary_tool(term: str) -> str:
     synsets = wn.synsets(term)
     if not synsets:
@@ -100,18 +112,39 @@ def dictionary_tool(term: str) -> str:
 
 def chat(message, history):
     lower = message.lower()
+    response_parts = []
+    
     if "calculate" in lower:  
+        tool_used = "Tool used: Calculator Tool"
         logger.info("Routing to Calculator Tool for expr: %s", message)
         expr = re.sub(r"(?i).*calculate\s*", "", message)
         answer = calculator_tool(expr)
+        context_snippets = "No context retrieval for calculator tool"
     elif "define" in lower:
+        tool_used = "Tool used: Dictionary Tool"
         logger.info("Routing to Dictionary Tool for term: %s", message)
         term = re.sub(r"(?i).*define\s*", "", message).strip(" ?.")
         answer = dictionary_tool(term)
+        context_snippets = "No context retrieval for dictionary tool"
     else:
+        tool_used = "Tool used: RAG Pipeline"
         logger.info("Routing to RAG pipeline for question: %s", message)
+        
+        context_snippets, _ = get_context_str_and_docs(message)
+        
         result = rag_chain.invoke({"question": message})
         answer = result["answer"]
-    return answer
+    
+    response_parts.append(f"### {tool_used}\n")
+    response_parts.append(f"### Retrieved Context\n```\n{context_snippets}\n```\n")
+    response_parts.append(f"### Answer\n{answer}")
+    
+    return "\n\n".join(response_parts)
 
-view = gr.ChatInterface(chat, type="messages").launch(inbrowser=True)
+
+# simple chat ui using gradio
+view = gr.ChatInterface(
+    chat,
+    type="messages",
+    chatbot=gr.Chatbot(render=True, height=600),
+).launch(inbrowser=True)
