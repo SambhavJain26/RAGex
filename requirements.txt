@@ -23,3 +23,5 @@ setuptools
 dotenv
 wheel
 chroma-hnswlib
+flask
+flask-socketio

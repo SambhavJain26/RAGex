@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RAG Chatbot</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/github.min.css">
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row vh-100">
+            <div class="col-md-3 col-lg-2 sidebar">
+                <div class="sidebar-header">
+                    <h3>RAG Chatbot</h3>
+                </div>
+                <div class="sidebar-actions">
+                    <button id="new-chat-btn" class="btn btn-primary mb-3 w-100">
+                        <i class="fas fa-plus"></i> New Chat
+                    </button>
+                </div>
+                <div class="sidebar-footer">
+                    <p class="text-center text-muted small">Powered by LangChain & Flask</p>
+                </div>
+            </div>
+            
+            <div class="col-md-9 col-lg-10 main-content">
+                <div class="chat-container">
+                    <div id="chat-messages" class="chat-messages">
+                        <div class="welcome-message">
+                            <h1>Welcome to RAG Chatbot</h1>
+                            <p>Ask me anything about your knowledge base, or try:</p>
+                            <ul>
+                                <li>"What is Insurellm and its products"</li>
+                                <li>"Calculate 25 * 16"</li>
+                                <li>"Define knowledge"</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="chat-input-container">
+                        <form id="chat-form" class="chat-form">
+                            <div class="input-group">
+                                <textarea id="message-input" class="form-control" placeholder="Type your message..." rows="1"></textarea>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-paper-plane"></i>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/4.0.2/marked.min.js"></script>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>
