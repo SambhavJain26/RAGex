@@ -1,2 +1,3 @@
 .env
 ragenv/
+vector_db/
