@@ -43,4 +43,17 @@ def add_context(message):
     return message
 
 
-print(add_context("what is Carllm?"))
+def chat(message, history):
+    messages = [{"role": "system", "content": system_message}] + history
+    message = add_context(message)
+    messages.append({"role": "user", "content": message})
+
+    stream = openai.chat.completions.create(model=MODEL, messages=messages, stream=True)
+
+    response = ""
+    for chunk in stream:
+        response += chunk.choices[0].delta.content or ''
+        yield response
+
+view = gr.ChatInterface(chat, type="messages").launch()
+
