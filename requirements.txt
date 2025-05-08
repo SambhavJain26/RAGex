@@ -45,3 +45,4 @@ feedparser
 dotenv
 wheel
 chroma-hnswlib
+PyDictionary

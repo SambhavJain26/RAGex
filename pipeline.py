@@ -1,71 +1,108 @@
 import os
 import glob
+import re
+import logging
 from dotenv import load_dotenv
 import gradio as gr
+import nltk
+from nltk.corpus import wordnet as wn
 
 from langchain_community.document_loaders import DirectoryLoader, TextLoader
 from langchain_text_splitters import CharacterTextSplitter
-from langchain_core.documents import Document
 from langchain_openai import OpenAIEmbeddings, ChatOpenAI
 from langchain_chroma import Chroma
-from sklearn.manifold import TSNE
-import plotly.graph_objects as go
 from langchain.memory import ConversationBufferMemory
 from langchain.chains import ConversationalRetrievalChain
 
+
 MODEL = "gpt-4o-mini"
-db_name = "vector_db"
+DB_DIR = "vector_db"
 
 load_dotenv(override=True)
 os.environ['OPENAI_API_KEY'] = os.getenv('OPENAI_API_KEY', 'your-key-if-not-using-env')
 
-folders = glob.glob("knowledge-base/*")
-text_loader_kwargs = {'encoding': 'utf-8'}
 
+folders = glob.glob("knowledge-base/*")
 documents = []
 for folder in folders:
     doc_type = os.path.basename(folder)
-    loader = DirectoryLoader(folder, glob="**/*.md", loader_cls=TextLoader, loader_kwargs=text_loader_kwargs)
-    folder_docs = loader.load()
-    for doc in folder_docs:
+    loader = DirectoryLoader(
+        folder,
+        glob="**/*.md",
+        loader_cls=TextLoader,
+        loader_kwargs={'encoding': 'utf-8'}
+    )
+    for doc in loader.load():
         doc.metadata["doc_type"] = doc_type
         documents.append(doc)
 
-text_splitter = CharacterTextSplitter(chunk_size=1000, chunk_overlap=300)
-chunks = text_splitter.split_documents(documents)
-
-doc_types = set(chunk.metadata['doc_type'] for chunk in chunks)
-print(f"Document types found: {', '.join(doc_types)}")
+# creating chunks
+splitter = CharacterTextSplitter(chunk_size=1000, chunk_overlap=300)
+chunks = splitter.split_documents(documents)
 
 embeddings = OpenAIEmbeddings()
+if os.path.exists(DB_DIR):
+    Chroma(persist_directory=DB_DIR, embedding_function=embeddings).delete_collection()
 
-if os.path.exists(db_name):
-    Chroma(persist_directory=db_name, embedding_function=embeddings).delete_collection()
+# storing in chroma vectorstore
+vectorstore = Chroma.from_documents(
+    documents=chunks,
+    embedding=embeddings,
+    persist_directory=DB_DIR
+)
 
-vectorstore = Chroma.from_documents(documents=chunks, embedding=embeddings, persist_directory=db_name)
-print(f"Vectorstore created with {vectorstore._collection.count()} documents")
-
-collection = vectorstore._collection
-sample_embedding = collection.get(limit=1, include=["embeddings"])["embeddings"][0]
-dimensions = len(sample_embedding)
-print(f"The vectors have {dimensions:,} dimensions")
-
-# create a new Chat with OpenAI
-llm = ChatOpenAI(temperature=0.7, model_name=MODEL)
-
-# set up the conversation memory for the chat
+llm = ChatOpenAI(model_name=MODEL, temperature=0.7)
 memory = ConversationBufferMemory(memory_key='chat_history', return_messages=True)
+retriever = vectorstore.as_retriever(search_kwargs={"k": 3})      # retrieves the top 3 chunks
+rag_chain = ConversationalRetrievalChain.from_llm(
+    llm=llm,
+    retriever=retriever,
+    memory=memory
+)
 
-# the retriever is an abstraction over the VectorStore that will be used during RAG
-retriever = vectorstore.as_retriever(search_kwargs={"k": 3})
+def calculator_tool(expr: str) -> str:
+    expr = expr.lower()
+    replacements = {
+        "multiplied by": "*",
+        "times": "*",
+        "plus": "+",
+        "minus": "-",
+        "divided by": "/",
+        "over": "/",
+        # allow 'x' as multiplication
+        " x ": " * ",
+    }
+    for word, sym in replacements.items():
+        expr = expr.replace(word, sym)
+    expr = re.sub(r"[^0-9\+\-\*/\.\(\)\s]", "", expr)
+    try:
+        return str(eval(expr, {"__builtins__": {}}, {}))
+    except Exception as e:
+        return f"Calculation error: {e}"
 
-# putting it together: set up the conversation chain with the GPT 4o-mini LLM, the vector store and memory
-conversation_chain = ConversationalRetrievalChain.from_llm(llm=llm, retriever=retriever, memory=memory)
 
+
+def dictionary_tool(term: str) -> str:
+    synsets = wn.synsets(term)
+    if not synsets:
+        return f"No definition found for '{term}'."
+    lines = []
+    for syn in synsets[:3]:
+        lines.append(f"{syn.pos()}: {syn.definition()}")
+    return "\n".join(lines)
 
 def chat(message, history):
-    result = conversation_chain.invoke({"question": message})
-    return result["answer"]
-
+    lower = message.lower()
+    if "calculate" in lower:
+        expr = re.sub(r"(?i).*calculate\s*", "", message)
+        answer = calculator_tool(expr)
+    elif "define" in lower:
+        term = re.sub(r"(?i).*define\s*", "", message).strip(" ?.")
+        answer = dictionary_tool(term)
+    else:
+        # fallback to your RAG + LLM pipeline
+        result = rag_chain.invoke({"question": message})
+        answer = result["answer"]
+    return answer
 
 view = gr.ChatInterface(chat, type="messages").launch(inbrowser=True)
