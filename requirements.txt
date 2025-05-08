@@ -43,3 +43,5 @@ speedtest-cli
 sentence_transformers
 feedparser
 dotenv
+wheel
+chroma-hnswlib
