@@ -21,6 +21,13 @@ DB_DIR = "vector_db"
 load_dotenv(override=True)
 os.environ['OPENAI_API_KEY'] = os.getenv('OPENAI_API_KEY', 'your-key-if-not-using-env')
 
+# logging each step
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s"
+)
+logger = logging.getLogger(__name__)
+
 
 folders = glob.glob("knowledge-base/*")
 documents = []
@@ -93,14 +100,16 @@ def dictionary_tool(term: str) -> str:
 
 def chat(message, history):
     lower = message.lower()
-    if "calculate" in lower:
+    if "calculate" in lower:  
+        logger.info("Routing to Calculator Tool for expr: %s", message)
         expr = re.sub(r"(?i).*calculate\s*", "", message)
         answer = calculator_tool(expr)
     elif "define" in lower:
+        logger.info("Routing to Dictionary Tool for term: %s", message)
         term = re.sub(r"(?i).*define\s*", "", message).strip(" ?.")
         answer = dictionary_tool(term)
     else:
-        # fallback to your RAG + LLM pipeline
+        logger.info("Routing to RAG pipeline for question: %s", message)
         result = rag_chain.invoke({"question": message})
         answer = result["answer"]
     return answer
