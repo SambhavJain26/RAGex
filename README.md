@@ -44,6 +44,7 @@ pip install -r requirements.txt
 ### 4. Initialize NLTK WordNet
 
 Before running the app, download the WordNet corpus:
+This is only done once
 
 ```bash
 python -c "import nltk; nltk.download('wordnet')"
