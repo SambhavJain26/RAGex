@@ -4,6 +4,8 @@ from flask_socketio import SocketIO
 from dotenv import load_dotenv
 import logging
 import uuid
+import eventlet
+eventlet.monkey_patch()
 
 from rag_utils import initialize_chatbot
 
