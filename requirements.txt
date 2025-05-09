@@ -8,3 +8,7 @@ langchain-openai
 langchain_chroma
 langchain[docarray]
 langchain_community
+pydantic
+gunicorn
+eventlet
+openai

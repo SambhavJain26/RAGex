@@ -14,7 +14,7 @@ if not os.getenv('OPENAI_API_KEY'):
 # Flask app
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', os.urandom(24).hex())
-socketio = SocketIO(app)
+socketio = SocketIO(app, cors_allowed_origins="*")
 
 logging.basicConfig(
     level=logging.INFO,
@@ -32,7 +32,7 @@ def index():
     if 'session_id' not in session:
         session['session_id'] = str(uuid.uuid4())
         chat_sessions[session['session_id']] = []
-    
+        
     return render_template('index.html')
 
 @app.route('/api/chat', methods=['POST'])
@@ -43,7 +43,7 @@ def chat():
     
     if not user_message:
         return jsonify({'error': 'No message provided'}), 400
-
+    
     try:
         response = chatbot.process_message(user_message)
         
@@ -74,6 +74,8 @@ def clear_history():
         chat_sessions[session_id] = []
     return jsonify({'status': 'success'})
 
+# For local development
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
-    socketio.run(app, host='0.0.0.0', port=port, debug=True)
+    debug_mode = os.environ.get('FLASK_DEBUG', 'False').lower() == 'true'
+    socketio.run(app, host='0.0.0.0', port=port, debug=debug_mode)
