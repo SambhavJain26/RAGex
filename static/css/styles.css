@@ -48,7 +48,8 @@ body {
 .welcome-message {
     margin: auto;
     text-align: center;
-    max-width: 600px;
+    max-width: 1200px; /* Adjusted to better fit 2 columns of 350px each plus some spacing */
+    width: 100%;
     padding: 30px;
 }
 
@@ -170,6 +171,7 @@ code {
 /* grid questions */
 .tools-grid {
     margin: 20px 0;
+    width: 100%;
 }
 
 .tool-card {
@@ -214,7 +216,12 @@ code {
 @media (min-width: 768px) {
     .row-cols-md-2 > * {
         flex: 0 0 auto;
-        width: 50%;
+        width: 350px !important; /* Fixed width of 350px */
+    }
+    
+    /* Center the row to ensure columns are centered */
+    .row {
+        justify-content: center;
     }
 }
 

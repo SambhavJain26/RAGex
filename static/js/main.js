@@ -18,6 +18,13 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    // IMMEDIATELY clear any existing welcome message to prevent both showing
+    // This is critical to fix the issue with both welcome messages showing on refresh
+    const existingWelcomeMessage = document.querySelector('.welcome-message');
+    if (existingWelcomeMessage) {
+        existingWelcomeMessage.remove();
+    }
+
     // Set up event listeners for question items - this needs to be called whenever new questions are added
     function setupQuestionItemListeners() {
         const questionItems = document.querySelectorAll('.question-item');
@@ -34,9 +41,6 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         });
     }
-
-    // Initial setup of question items
-    setupQuestionItemListeners();
     
     // Load chat history on page load
     loadChatHistory();
