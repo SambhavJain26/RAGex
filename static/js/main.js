@@ -143,7 +143,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                     <li class="question-item">Calculate sqrt(144) + 25</li>
                                     <li class="question-item">Calculate 5 feet to meters</li>
                                     <li class="question-item">Calculate sin(45) + cos(30)</li>
-                                    <li class="question-item">Calculate 15% of 230</li>
+                                    <li class="question-item">Calculate 10!</li>
                                 </ul>
                             </div>
                         </div>
