@@ -6,8 +6,6 @@ set -o errexit
 pip install --upgrade pip
 pip install -r requirements.txt
 
-# Create necessary directories if they don't exist
-mkdir -p knowledge-base
 mkdir -p vector_db
 
 # Download NLTK data

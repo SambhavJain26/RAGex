@@ -2,9 +2,18 @@ import os
 import glob
 import re
 import logging
+import math
+import requests
 from typing import Tuple, List, Dict, Any
 import nltk
 from nltk.corpus import wordnet as wn
+
+# Install required packages
+try:
+    import sympy
+except ImportError:
+    import subprocess
+    subprocess.check_call(["pip", "install", "sympy"])
 
 from langchain_community.document_loaders import DirectoryLoader, TextLoader
 from langchain_text_splitters import CharacterTextSplitter
@@ -96,7 +105,69 @@ class RAGChatbot:
         return "\n\n".join(context_snippets), docs
 
     def calculator_tool(self, expr: str) -> str:
-        expr = expr.lower()
+        """Advanced calculator using SymPy for comprehensive math support."""
+        try:
+            # Try to import required libraries
+            import sympy as sp
+            from sympy.parsing.sympy_parser import parse_expr, standard_transformations, implicit_multiplication_application
+            import re
+            import math
+            from sympy import symbols, solve, Eq
+        except ImportError:
+            logger.warning("SymPy not installed. Installing now...")
+            import subprocess
+            subprocess.check_call(["pip", "install", "sympy"])
+            import sympy as sp
+            from sympy.parsing.sympy_parser import parse_expr, standard_transformations, implicit_multiplication_application
+        
+        original_expr = expr
+        expr = expr.lower().strip()
+        
+        # Check for equation solving
+        if "solve" in expr or "=" in expr:
+            try:
+                # Extract the equation part
+                equation_match = re.search(r'solve\s+(.*?)(?=$)', expr) if "solve" in expr else None
+                if equation_match:
+                    equation_str = equation_match.group(1).strip()
+                else:
+                    equation_str = expr
+                
+                # Handle equals sign
+                if "=" in equation_str:
+                    left, right = equation_str.split("=", 1)
+                    equation_str = f"{left}-(${right})"
+                
+                # Define the variable (assume x if not specified)
+                x = symbols('x')
+                
+                # Parse and solve the equation
+                equation = parse_expr(equation_str, transformations=(standard_transformations + (implicit_multiplication_application,)))
+                solution = solve(equation, x)
+                
+                if solution:
+                    if len(solution) == 1:
+                        return f"x = {solution[0]}"
+                    else:
+                        return f"Solutions: {', '.join([f'x = {sol}' for sol in solution])}"
+                else:
+                    return "No solutions found"
+            except Exception as e:
+                logger.error(f"Error solving equation: {e}")
+                # Fall back to regular calculation if equation solving fails
+        
+        # Handle special cases like factorial
+        if "!" in expr and not "!=" in expr:
+            try:
+                # Extract the factorial expression
+                num_match = re.search(r'(\d+)!', expr)
+                if num_match:
+                    num = int(num_match.group(1))
+                    return str(math.factorial(num))
+            except Exception as e:
+                return f"Factorial error: {e}"
+        
+        # Preprocess common expressions
         replacements = {
             "multiplied by": "*",
             "times": "*",
@@ -105,23 +176,211 @@ class RAGChatbot:
             "divided by": "/",
             "over": "/",
             " x ": " * ",
+            "×": "*",
+            "÷": "/",
+            "mod": "%",
+            "sqrt": "sqrt",
+            "squared": "**2",
+            "cubed": "**3",
+            "to the power of": "**",
+            "^": "**",
+            "percent": "/100",
+            "%": "/100",
+            "pi": "pi",
+            "sin": "sin",
+            "cos": "cos",
+            "tan": "tan",
+            "log": "log",
+            "ln": "ln",
         }
+        
         for word, sym in replacements.items():
             expr = expr.replace(word, sym)
-        expr = re.sub(r"[^0-9\+\-\*/\.\(\)\s]", "", expr)
+        
+        # Set up parsing transformations
+        transformations = standard_transformations + (implicit_multiplication_application,)
+        
         try:
-            return str(eval(expr, {"__builtins__": {}}, {}))
+            # Convert unit calculations like "5 feet to meters"
+            unit_conversion_match = re.search(r'(\d+(?:\.\d+)?)\s+(\w+)\s+to\s+(\w+)', expr)
+            if unit_conversion_match:
+                value, from_unit, to_unit = unit_conversion_match.groups()
+                
+                # Define unit conversions
+                unit_conversions = {
+                    ('feet', 'meters'): lambda x: x * 0.3048,
+                    ('meters', 'feet'): lambda x: x * 3.28084,
+                    ('inches', 'cm'): lambda x: x * 2.54,
+                    ('cm', 'inches'): lambda x: x * 0.393701,
+                    ('miles', 'km'): lambda x: x * 1.60934,
+                    ('km', 'miles'): lambda x: x * 0.621371,
+                    ('pounds', 'kg'): lambda x: x * 0.453592,
+                    ('kg', 'pounds'): lambda x: x * 2.20462,
+                    ('celsius', 'fahrenheit'): lambda x: x * 9/5 + 32,
+                    ('fahrenheit', 'celsius'): lambda x: (x - 32) * 5/9,
+                    # Add more conversions as needed
+                }
+                
+                if (from_unit, to_unit) in unit_conversions:
+                    result = unit_conversions[(from_unit, to_unit)](float(value))
+                    return f"{value} {from_unit} = {result:.4f} {to_unit}"
+                else:
+                    return f"Conversion from {from_unit} to {to_unit} not supported"
+            
+            # Try to parse and evaluate the expression using SymPy
+            parsed_expr = parse_expr(expr, transformations=transformations)
+            result = parsed_expr.evalf()
+            
+            # Format the result
+            if result.is_integer and float(result) < 10**12:  # if integer and not too large
+                return str(int(result))
+            else:
+                # Format to handle small and large numbers appropriately
+                result_float = float(result)
+                if abs(result_float) < 1e-10:
+                    return "0"
+                elif abs(result_float) > 1e10 or abs(result_float) < 1e-6:
+                    return f"{result_float:.6e}"
+                else:
+                    formatted = f"{result_float:.6f}".rstrip('0').rstrip('.')
+                    return formatted if formatted else "0"
+            
         except Exception as e:
-            return f"Calculation error: {e}"
+            logger.error(f"SymPy calculation error: {e}")
+            
+            # Last resort: Try using eval with a limited scope (less capable but might work for simple expressions)
+            try:
+                # Create a very limited safe scope for basic calculations
+                safe_dict = {
+                    "math": math,
+                    "sin": math.sin,
+                    "cos": math.cos,
+                    "tan": math.tan,
+                    "sqrt": math.sqrt,
+                    "pi": math.pi,
+                    "e": math.e,
+                    "log": math.log10,
+                    "ln": math.log,
+                }
+                
+                result = eval(expr, {"__builtins__": None}, safe_dict)
+                
+                # Format the result
+                if isinstance(result, float):
+                    if abs(result) < 1e-10:
+                        return "0"
+                    elif abs(result - round(result)) < 1e-10:
+                        return str(int(result))
+                    else:
+                        return f"{result:.6f}".rstrip('0').rstrip('.')
+                else:
+                    return str(result)
+            except Exception as e2:
+                return f"Could not calculate: '{original_expr}'. Error: {e2}"
 
     def dictionary_tool(self, term: str) -> str:
+        """Enhanced dictionary tool using multiple sources: WordNet and Free Dictionary API."""
+        import requests
+        import json
+        from nltk.corpus import wordnet as wn
+        
+        term = term.strip().lower()
+        term = re.sub(r'[^\w\s]', '', term)  # Remove punctuation
+        
+        results = []
+        
+        # 1. First try WordNet
         synsets = wn.synsets(term)
-        if not synsets:
+        if synsets:
+            lines = []
+            for syn in synsets[:3]:
+                pos = syn.pos()
+                # Convert WordNet POS abbreviations to full forms
+                pos_mapping = {
+                    'n': 'noun',
+                    'v': 'verb',
+                    'a': 'adjective',
+                    's': 'adjective satellite',
+                    'r': 'adverb'
+                }
+                pos_full = pos_mapping.get(pos, pos)
+                lines.append(f"{pos_full}: {syn.definition()}")
+            results.append("WordNet definitions:")
+            results.append("\n".join(lines))
+        
+        # 2. Try Free Dictionary API
+        try:
+            logger.info(f"Looking up '{term}' in Free Dictionary API")
+            url = f"https://api.dictionaryapi.dev/api/v2/entries/en/{term}"
+            response = requests.get(url, timeout=5)
+            
+            if response.status_code == 200:
+                data = response.json()
+                if data and isinstance(data, list) and len(data) > 0:
+                    entry = data[0]
+                    
+                    api_results = []
+                    api_results.append(f"Free Dictionary definitions for '{term}':")
+                    
+                    # Process meanings
+                    for meaning in entry.get('meanings', [])[:3]:  # Limit to 3 meanings
+                        part_of_speech = meaning.get('partOfSpeech', '')
+                        definitions = meaning.get('definitions', [])
+                        
+                        if definitions:
+                            definition = definitions[0].get('definition', '')
+                            if definition:
+                                api_results.append(f"{part_of_speech}: {definition}")
+                                
+                                # Add example if available
+                                example = definitions[0].get('example', '')
+                                if example:
+                                    api_results.append(f"   Example: {example}")
+                    
+                    if len(api_results) > 1:  # If we found actual definitions
+                        results.append("\n".join(api_results))
+        except Exception as e:
+            logger.error(f"Error using Free Dictionary API: {e}")
+        
+        # 3. Try alternative dictionary API (Merriam-Webster) if implemented
+        # This would require an API key, so it's commented out but shows how to add another API
+        """
+        try:
+            # Replace with your Merriam-Webster API key
+            api_key = "your-api-key-here"
+            url = f"https://www.dictionaryapi.com/api/v3/references/collegiate/json/{term}?key={api_key}"
+            response = requests.get(url, timeout=5)
+            
+            if response.status_code == 200:
+                data = response.json()
+                # Process Merriam-Webster data
+                # Add formatted definitions to results
+        except Exception as e:
+            logger.error(f"Error using Merriam-Webster API: {e}")
+        """
+        
+        # 4. As a last resort, use the LLM (only if enabled)
+        use_llm_fallback = False  # Set to True if you want LLM fallback
+        
+        if not results and use_llm_fallback:
+            try:
+                logger.info(f"Term '{term}' not found in dictionaries, using LLM as last resort")
+                prompt = f"Provide a clear, concise dictionary definition for the term: '{term}'. Give 1-3 definitions with their part of speech, like a dictionary entry."
+                
+                response = self.llm.invoke(prompt)
+                
+                # Check if we got a reasonable response
+                if response and len(response.content) > 10:
+                    results.append("AI-generated definition:")
+                    results.append(response.content)
+            except Exception as e:
+                logger.error(f"Error using LLM for definition: {e}")
+        
+        # Return combined results or no definition found message
+        if results:
+            return "\n\n".join(results)
+        else:
             return f"No definition found for '{term}'."
-        lines = []
-        for syn in synsets[:3]:
-            lines.append(f"{syn.pos()}: {syn.definition()}")
-        return "\n".join(lines)
 
     def process_message(self, message: str) -> Dict[str, str]:
         lower = message.lower()
@@ -130,19 +389,21 @@ class RAGChatbot:
         
         # Determining which tool to use
         if "calculate" in lower:
-            tool_used = "Calculator Tool"
+            tool_used = "🧮 Calculator Tool"
             logger.info(f"Routing to Calculator Tool for expr: {message}")
-            expr = re.sub(r"(?i).*calculate\s*", "", message)
+            # Extract the expression part from the message
+            expr = re.sub(r"(?i).*calculate\s*", "", message).strip()
             answer = self.calculator_tool(expr)
             context_snippets = "No context retrieval for calculator tool"
         elif "define" in lower:
-            tool_used = "Dictionary Tool"
+            tool_used = "📚 Dictionary Tool"
             logger.info(f"Routing to Dictionary Tool for term: {message}")
+            # Extract the term part from the message
             term = re.sub(r"(?i).*define\s*", "", message).strip(" ?.")
             answer = self.dictionary_tool(term)
             context_snippets = "No context retrieval for dictionary tool"
         else:
-            tool_used = "RAG Pipeline"
+            tool_used = "🔍 RAG Pipeline"
             logger.info(f"Routing to RAG pipeline for question: {message}")
             
             context_snippets, _ = self.get_context_str_and_docs(message)
