@@ -176,7 +176,7 @@ class RAGChatbot:
             "divided by": "/",
             "over": "/",
             " x ": " * ",
-            "×": "*",
+            "x": "*",
             "÷": "/",
             "mod": "%",
             "sqrt": "sqrt",
