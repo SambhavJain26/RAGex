@@ -136,7 +136,7 @@ class RAGChatbot:
                 # Handle equals sign
                 if "=" in equation_str:
                     left, right = equation_str.split("=", 1)
-                    equation_str = f"{left}-(${right})"
+                    equation_str = f"{left}-({right})"
                 
                 # Define the variable (assume x if not specified)
                 x = symbols('x')
@@ -176,7 +176,13 @@ class RAGChatbot:
             "divided by": "/",
             "over": "/",
             " x ": " * ",
-            "x": "*",
+            "cosec": "1/sin",
+            "sec": "1/cos",
+            "cot": "1/tan",
+            "arcsin": "asin",
+            "arccos": "acos",
+            "arctan": "atan",
+            "x": "*",  # For expressions like "3x5"
             "÷": "/",
             "mod": "%",
             "sqrt": "sqrt",
@@ -194,8 +200,18 @@ class RAGChatbot:
             "ln": "ln",
         }
         
+        # Process replacements - need to be careful with "x" since it could be a variable
+        # First replace " x " with " * " (space-delimited multiplication)
+        expr = expr.replace(" x ", " * ")
+        
+        # Handle expressions like "3x5" where x is clearly multiplication
+        # Look for patterns like digit + x + digit
+        expr = re.sub(r'(\d+)x(\d+)', r'\1*\2', expr)
+        
+        # For other replacements
         for word, sym in replacements.items():
-            expr = expr.replace(word, sym)
+            if word != "x":  # Skip "x" as we handled it specially above
+                expr = expr.replace(word, sym)
         
         # Set up parsing transformations
         transformations = standard_transformations + (implicit_multiplication_application,)
@@ -218,6 +234,16 @@ class RAGChatbot:
                     ('kg', 'pounds'): lambda x: x * 2.20462,
                     ('celsius', 'fahrenheit'): lambda x: x * 9/5 + 32,
                     ('fahrenheit', 'celsius'): lambda x: (x - 32) * 5/9,
+                    ('liters', 'gallons'): lambda x: x * 0.264172,
+                    ('gallons', 'liters'): lambda x: x * 3.78541,
+                    ('ounces', 'grams'): lambda x: x * 28.3495,
+                    ('grams', 'ounces'): lambda x: x * 0.03527396,
+                    ('yards', 'meters'): lambda x: x * 0.9144,
+                    ('meters', 'yards'): lambda x: x * 1.09361,
+                    ('mph', 'kph'): lambda x: x * 1.60934,
+                    ('kph', 'mph'): lambda x: x * 0.621371,
+                    ('acres', 'hectares'): lambda x: x * 0.404686,
+                    ('hectares', 'acres'): lambda x: x * 2.47105,
                     # Add more conversions as needed
                 }
                 
@@ -256,14 +282,24 @@ class RAGChatbot:
                     "sin": math.sin,
                     "cos": math.cos,
                     "tan": math.tan,
+                    "asin": math.asin,
+                    "acos": math.acos,
+                    "atan": math.atan,
                     "sqrt": math.sqrt,
                     "pi": math.pi,
                     "e": math.e,
                     "log": math.log10,
                     "ln": math.log,
+                    # Add inverse trigonometric functions
+                    "cosec": lambda x: 1/math.sin(x),
+                    "sec": lambda x: 1/math.cos(x),
+                    "cot": lambda x: 1/math.tan(x),
                 }
                 
-                result = eval(expr, {"__builtins__": None}, safe_dict)
+                # Explicitly handle "3x5" type expressions by replacing x with *
+                eval_expr = re.sub(r'(\d+)x(\d+)', r'\1*\2', expr)
+                
+                result = eval(eval_expr, {"__builtins__": None}, safe_dict)
                 
                 # Format the result
                 if isinstance(result, float):
@@ -279,7 +315,7 @@ class RAGChatbot:
                 return f"Could not calculate: '{original_expr}'. Error: {e2}"
 
     def dictionary_tool(self, term: str) -> str:
-        """Enhanced dictionary tool using multiple sources: WordNet and Free Dictionary API."""
+        """Enhanced dictionary tool using multiple sources: Free Dictionary API first, then WordNet."""
         import requests
         import json
         from nltk.corpus import wordnet as wn
@@ -288,27 +324,9 @@ class RAGChatbot:
         term = re.sub(r'[^\w\s]', '', term)  # Remove punctuation
         
         results = []
+        definition_found = False
         
-        # 1. First try WordNet
-        synsets = wn.synsets(term)
-        if synsets:
-            lines = []
-            for syn in synsets[:3]:
-                pos = syn.pos()
-                # Convert WordNet POS abbreviations to full forms
-                pos_mapping = {
-                    'n': 'noun',
-                    'v': 'verb',
-                    'a': 'adjective',
-                    's': 'adjective satellite',
-                    'r': 'adverb'
-                }
-                pos_full = pos_mapping.get(pos, pos)
-                lines.append(f"{pos_full}: {syn.definition()}")
-            results.append("WordNet definitions:")
-            results.append("\n".join(lines))
-        
-        # 2. Try Free Dictionary API
+        # 1. First try Free Dictionary API (primary source)
         try:
             logger.info(f"Looking up '{term}' in Free Dictionary API")
             url = f"https://api.dictionaryapi.dev/api/v2/entries/en/{term}"
@@ -320,7 +338,6 @@ class RAGChatbot:
                     entry = data[0]
                     
                     api_results = []
-                    api_results.append(f"Free Dictionary definitions for '{term}':")
                     
                     # Process meanings
                     for meaning in entry.get('meanings', [])[:3]:  # Limit to 3 meanings
@@ -337,46 +354,48 @@ class RAGChatbot:
                                 if example:
                                     api_results.append(f"   Example: {example}")
                     
-                    if len(api_results) > 1:  # If we found actual definitions
+                    if api_results:
                         results.append("\n".join(api_results))
+                        definition_found = True
         except Exception as e:
             logger.error(f"Error using Free Dictionary API: {e}")
         
-        # 3. Try alternative dictionary API (Merriam-Webster) if implemented
-        # This would require an API key, so it's commented out but shows how to add another API
-        """
-        try:
-            # Replace with your Merriam-Webster API key
-            api_key = "your-api-key-here"
-            url = f"https://www.dictionaryapi.com/api/v3/references/collegiate/json/{term}?key={api_key}"
-            response = requests.get(url, timeout=5)
-            
-            if response.status_code == 200:
-                data = response.json()
-                # Process Merriam-Webster data
-                # Add formatted definitions to results
-        except Exception as e:
-            logger.error(f"Error using Merriam-Webster API: {e}")
-        """
+        # 2. Try WordNet only if Free Dictionary API didn't return results
+        if not definition_found:
+            synsets = wn.synsets(term)
+            if synsets:
+                lines = []
+                for syn in synsets[:3]:
+                    pos = syn.pos()
+                    pos_mapping = {
+                        'n': 'noun',
+                        'v': 'verb',
+                        'a': 'adjective',
+                        's': 'adjective satellite',
+                        'r': 'adverb'
+                    }
+                    pos_full = pos_mapping.get(pos, pos)
+                    lines.append(f"{pos_full}: {syn.definition()}")
+                if lines:
+                    results.append("\n".join(lines))
+                    definition_found = True
         
-        # 4. As a last resort, use the LLM (only if enabled)
-        use_llm_fallback = False  # Set to True if you want LLM fallback
+        # 3. As a last resort, use the LLM (only if enabled and no other definitions found)
+        use_llm_fallback = False  
         
-        if not results and use_llm_fallback:
+        if not definition_found and use_llm_fallback:
             try:
                 logger.info(f"Term '{term}' not found in dictionaries, using LLM as last resort")
                 prompt = f"Provide a clear, concise dictionary definition for the term: '{term}'. Give 1-3 definitions with their part of speech, like a dictionary entry."
                 
                 response = self.llm.invoke(prompt)
                 
-                # Check if we got a reasonable response
                 if response and len(response.content) > 10:
                     results.append("AI-generated definition:")
                     results.append(response.content)
             except Exception as e:
                 logger.error(f"Error using LLM for definition: {e}")
-        
-        # Return combined results or no definition found message
+
         if results:
             return "\n\n".join(results)
         else:
@@ -386,24 +405,21 @@ class RAGChatbot:
         lower = message.lower()
         
         self.chat_history.append({"role": "user", "content": message})
-        
-        # Determining which tool to use
+
         if "calculate" in lower:
-            tool_used = "🧮 Calculator Tool"
+            tool_used = "Calculator Tool"
             logger.info(f"Routing to Calculator Tool for expr: {message}")
-            # Extract the expression part from the message
             expr = re.sub(r"(?i).*calculate\s*", "", message).strip()
             answer = self.calculator_tool(expr)
             context_snippets = "No context retrieval for calculator tool"
         elif "define" in lower:
-            tool_used = "📚 Dictionary Tool"
+            tool_used = "Dictionary Tool"
             logger.info(f"Routing to Dictionary Tool for term: {message}")
-            # Extract the term part from the message
             term = re.sub(r"(?i).*define\s*", "", message).strip(" ?.")
             answer = self.dictionary_tool(term)
             context_snippets = "No context retrieval for dictionary tool"
         else:
-            tool_used = "🔍 RAG Pipeline"
+            tool_used = "RAG Pipeline"
             logger.info(f"Routing to RAG pipeline for question: {message}")
             
             context_snippets, _ = self.get_context_str_and_docs(message)
@@ -411,7 +427,6 @@ class RAGChatbot:
             result = self.rag_chain.invoke({"question": message})
             answer = result["answer"]
         
-        # Update chat history with bot response
         self.chat_history.append({"role": "assistant", "content": answer})
         
         return {

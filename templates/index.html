@@ -31,12 +31,68 @@
                     <div id="chat-messages" class="chat-messages">
                         <div class="welcome-message">
                             <h1>Welcome to RAG Chatbot</h1>
-                            <p>Ask me anything about your knowledge base, or try:</p>
-                            <ul>
-                                <li>"What is Insurellm and its products"</li>
-                                <li>"Calculate 25 * 16"</li>
-                                <li>"Define knowledge"</li>
-                            </ul>
+                            <p>Ask me anything about your knowledge base, or try one of these examples:</p>
+                            
+                            <div class="tools-grid">
+                                <div class="row row-cols-1 row-cols-md-3 g-4">
+                                    <!-- RAG Pipeline Tool -->
+                                    <div class="col">
+                                        <div class="card tool-card bg-light">
+                                            <div class="card-header bg-primary text-white">
+                                                <i class="fas fa-search me-2"></i> RAG Pipeline Tool
+                                            </div>
+                                            <div class="card-body">
+                                                <p class="card-text">Ask questions about your knowledge base.</p>
+                                                <ul class="example-questions">
+                                                    <li class="question-item"><i class="fas fa-question-circle rag-icon"></i>Who is Avery Lancaster?</li>
+                                                    <li class="question-item"><i class="fas fa-question-circle rag-icon"></i>Explain CarLLM in a few lines</li>
+                                                    <li class="question-item"><i class="fas fa-question-circle rag-icon"></i>What are the prices of CarLLM?</li>
+                                                    <li class="question-item"><i class="fas fa-question-circle rag-icon"></i>Tell me about InsureLLM</li>
+                                                    <li class="question-item"><i class="fas fa-question-circle rag-icon"></i>Different products of InsureLLM</li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Calculator Tool -->
+                                    <div class="col">
+                                        <div class="card tool-card bg-light">
+                                            <div class="card-header bg-success text-white">
+                                                <i class="fas fa-calculator me-2"></i> Calculator Tool
+                                            </div>
+                                            <div class="card-body">
+                                                <p class="card-text">Perform calculations of various types.</p>
+                                                <ul class="example-questions">
+                                                    <li class="question-item"><i class="fas fa-calculator calc-icon"></i>Calculate 3x5</li>
+                                                    <li class="question-item"><i class="fas fa-calculator calc-icon"></i>Calculate sqrt(144) + 25</li>
+                                                    <li class="question-item"><i class="fas fa-calculator calc-icon"></i>Calculate 5 feet to meters</li>
+                                                    <li class="question-item"><i class="fas fa-calculator calc-icon"></i>Calculate sin(45) + cos(30)</li>
+                                                    <li class="question-item"><i class="fas fa-calculator calc-icon"></i>Calculate 15% of 230</li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Dictionary Tool -->
+                                    <div class="col">
+                                        <div class="card tool-card bg-light">
+                                            <div class="card-header bg-danger text-white">
+                                                <i class="fas fa-book me-2"></i> Dictionary Tool
+                                            </div>
+                                            <div class="card-body">
+                                                <p class="card-text">Get definitions for words and phrases.</p>
+                                                <ul class="example-questions">
+                                                    <li class="question-item"><i class="fas fa-book dict-icon"></i>Define serendipity</li>
+                                                    <li class="question-item"><i class="fas fa-book dict-icon"></i>Define algorithm</li>
+                                                    <li class="question-item"><i class="fas fa-book dict-icon"></i>Define ephemeral</li>
+                                                    <li class="question-item"><i class="fas fa-book dict-icon"></i>Define pragmatic</li>
+                                                    <li class="question-item"><i class="fas fa-book dict-icon"></i>Define ubiquitous</li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     

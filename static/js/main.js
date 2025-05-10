@@ -16,6 +16,19 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    document.addEventListener('DOMContentLoaded', function() {
+            const questionItems = document.querySelectorAll('.question-item');
+            const messageInput = document.getElementById('message-input');
+            
+            questionItems.forEach(item => {
+                item.addEventListener('click', function() {
+                    const question = this.textContent.trim();
+                    messageInput.value = question;
+                    messageInput.focus();
+                });
+            });
+    });
+
     loadChatHistory();
 
     chatForm.addEventListener('submit', async (e) => {

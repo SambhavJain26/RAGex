@@ -167,6 +167,51 @@ code {
     animation-delay: 0.4s;
 }
 
+
+.tools-grid {
+    margin-top: 20px;
+    margin-bottom: 30px;
+}
+.tool-card {
+    height: 100%;
+    transition: transform 0.2s;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+.tool-card:hover {
+    transform: translateY(-5px);
+}
+.card-header {
+    border-radius: 10px 10px 0 0 !important;
+    font-weight: bold;
+}
+.example-questions {
+    list-style-type: none;
+    padding-left: 0;
+}
+.example-questions li {
+    padding: 6px 0;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.example-questions li:hover {
+    color: #0d6efd;
+    transform: translateX(5px);
+}
+.example-questions li i {
+    margin-right: 8px;
+    opacity: 0.7;
+}
+.rag-icon {
+    color: #6610f2;
+}
+.calc-icon {
+    color: #198754;
+}
+.dict-icon {
+    color: #dc3545;
+}
+
 @keyframes bounce {
     0%, 60%, 100% { transform: translateY(0); }
     30% { transform: translateY(-5px); }
