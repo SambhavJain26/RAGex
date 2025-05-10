@@ -167,51 +167,74 @@ code {
     animation-delay: 0.4s;
 }
 
-
+/* grid questions */
 .tools-grid {
-    margin-top: 20px;
-    margin-bottom: 30px;
+    margin: 20px 0;
 }
+
 .tool-card {
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    transition: all 0.2s ease;
     height: 100%;
-    transition: transform 0.2s;
-    border-radius: 10px;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    background-color: #f8f9fa;
 }
+
 .tool-card:hover {
-    transform: translateY(-5px);
+    box-shadow: 0 3px 6px rgba(0,0,0,0.15);
 }
+
 .card-header {
-    border-radius: 10px 10px 0 0 !important;
-    font-weight: bold;
+    background-color: #f1f3f5;
+    border-bottom: 1px solid #e0e0e0;
+    color: #343a40;
+    font-weight: 500;
+    padding: 10px 15px;
 }
+
 .example-questions {
     list-style-type: none;
     padding-left: 0;
 }
-.example-questions li {
-    padding: 6px 0;
+
+.question-item {
+    padding: 8px 10px;
+    margin-bottom: 8px;
+    border-radius: 4px;
+    background-color: #f1f3f5;
     cursor: pointer;
-    transition: all 0.2s;
-}
-.example-questions li:hover {
-    color: #0d6efd;
-    transform: translateX(5px);
-}
-.example-questions li i {
-    margin-right: 8px;
-    opacity: 0.7;
-}
-.rag-icon {
-    color: #6610f2;
-}
-.calc-icon {
-    color: #198754;
-}
-.dict-icon {
-    color: #dc3545;
+    transition: background-color 0.2s ease;
 }
 
+.question-item:hover {
+    background-color: #e9ecef;
+}
+
+@media (min-width: 768px) {
+    .row-cols-md-2 > * {
+        flex: 0 0 auto;
+        width: 50%;
+    }
+}
+
+@media (max-width: 767px) {
+    .col {
+        margin-bottom: 20px;
+    }
+}
+
+.rag-icon, .calc-icon, .dict-icon {
+    display: none;
+}
+
+.welcome-message h1 {
+    margin-bottom: 20px;
+}
+
+.welcome-message p {
+    margin-bottom: 15px;
+}
 @keyframes bounce {
     0%, 60%, 100% { transform: translateY(0); }
     30% { transform: translateY(-5px); }

@@ -4,11 +4,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const chatMessages = document.getElementById('chat-messages');
     const newChatBtn = document.getElementById('new-chat-btn');
     
+    // Auto-resize the input field
     messageInput.addEventListener('input', function() {
         this.style.height = 'auto';
         this.style.height = (this.scrollHeight) + 'px';
     });
 
+    // Submit when pressing Enter (without shift)
     messageInput.addEventListener('keydown', function(e) {
         if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
@@ -16,21 +18,30 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    document.addEventListener('DOMContentLoaded', function() {
-            const questionItems = document.querySelectorAll('.question-item');
-            const messageInput = document.getElementById('message-input');
-            
-            questionItems.forEach(item => {
-                item.addEventListener('click', function() {
-                    const question = this.textContent.trim();
-                    messageInput.value = question;
-                    messageInput.focus();
-                });
+    // Set up event listeners for question items - this needs to be called whenever new questions are added
+    function setupQuestionItemListeners() {
+        const questionItems = document.querySelectorAll('.question-item');
+        
+        questionItems.forEach(item => {
+            item.addEventListener('click', function() {
+                const question = this.textContent.trim();
+                messageInput.value = question;
+                messageInput.focus();
+                
+                // Auto-resize the input field to match content
+                messageInput.style.height = 'auto';
+                messageInput.style.height = (messageInput.scrollHeight) + 'px';
             });
-    });
+        });
+    }
 
+    // Initial setup of question items
+    setupQuestionItemListeners();
+    
+    // Load chat history on page load
     loadChatHistory();
 
+    // Chat form submission
     chatForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const message = messageInput.value.trim();
@@ -69,29 +80,97 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
     
+    // New chat button - clear history and show welcome message with grid
     newChatBtn.addEventListener('click', async () => {
         try {
             await fetch('/api/clear-history', { method: 'POST' });
             chatMessages.innerHTML = '';
-            const welcomeDiv = document.createElement('div');
-            welcomeDiv.className = 'welcome-message';
-            welcomeDiv.innerHTML = `
-                <h1>Welcome to RAG Chatbot</h1>
-                <p>Ask me anything about your knowledge base, or try:</p>
-                <ul>
-                    <li>"What is Insurellm and its products"</li>
-                    <li>"Calculate 25 * 16"</li>
-                    <li>"Define knowledge"</li>
-                </ul>
-            `;
-            chatMessages.appendChild(welcomeDiv);
+            
+            // Create welcome message with grid of questions
+            addWelcomeMessage();
+            
+            // Set up listeners for the newly added question items
+            setupQuestionItemListeners();
+            
         } catch (error) {
             console.error('Error clearing history:', error);
         }
     });
     
+    // Function to add welcome message with grid
+    function addWelcomeMessage() {
+        const welcomeDiv = document.createElement('div');
+        welcomeDiv.className = 'welcome-message';
+        welcomeDiv.innerHTML = `
+            <h1>Welcome to RAG Chatbot</h1>
+            <p>Ask me anything about your knowledge base, or try one of these examples:</p>
+            
+            <div class="tools-grid">
+                <div class="row row-cols-1 row-cols-md-2 g-4">
+                    <!-- RAG Pipeline Tool -->
+                    <div class="col">
+                        <div class="card tool-card">
+                            <div class="card-header">
+                                <i class="fas fa-search me-2"></i> RAG Pipeline Tool
+                            </div>
+                            <div class="card-body">
+                                <p class="card-text">Ask questions about your knowledge base.</p>
+                                <ul class="example-questions">
+                                    <li class="question-item">Who is Avery Lancaster?</li>
+                                    <li class="question-item">Explain CarLLM in a few lines</li>
+                                    <li class="question-item">What are the prices of CarLLM?</li>
+                                    <li class="question-item">Tell me about InsureLLM</li>
+                                    <li class="question-item">Different products of InsureLLM</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Calculator Tool -->
+                    <div class="col">
+                        <div class="card tool-card">
+                            <div class="card-header">
+                                <i class="fas fa-calculator me-2"></i> Calculator Tool
+                            </div>
+                            <div class="card-body">
+                                <p class="card-text">Perform calculations of various types.</p>
+                                <ul class="example-questions">
+                                    <li class="question-item">Calculate 3x5</li>
+                                    <li class="question-item">Calculate sqrt(144) + 25</li>
+                                    <li class="question-item">Calculate 5 feet to meters</li>
+                                    <li class="question-item">Calculate sin(45) + cos(30)</li>
+                                    <li class="question-item">Calculate 15% of 230</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Dictionary Tool -->
+                    <div class="col">
+                        <div class="card tool-card">
+                            <div class="card-header">
+                                <i class="fas fa-book me-2"></i> Dictionary Tool
+                            </div>
+                            <div class="card-body">
+                                <p class="card-text">Get definitions for words and phrases.</p>
+                                <ul class="example-questions">
+                                    <li class="question-item">Define serendipity</li>
+                                    <li class="question-item">Define algorithm</li>
+                                    <li class="question-item">Define ephemeral</li>
+                                    <li class="question-item">Define pragmatic</li>
+                                    <li class="question-item">Define ubiquitous</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        chatMessages.appendChild(welcomeDiv);
+    }
+    
+    // Add user message to chat
     function addUserMessage(message) {
-
         const welcomeMessage = document.querySelector('.welcome-message');
         if (welcomeMessage) {
             welcomeMessage.remove();
@@ -104,6 +183,7 @@ document.addEventListener('DOMContentLoaded', () => {
         scrollToBottom();
     }
     
+    // Add bot response to chat
     function addBotResponse(data) {
         const messageDiv = document.createElement('div');
         messageDiv.className = 'message bot-message';
@@ -138,6 +218,7 @@ document.addEventListener('DOMContentLoaded', () => {
         scrollToBottom();
     }
     
+    // Add typing indicator 
     function addTypingIndicator() {
         const typingDiv = document.createElement('div');
         typingDiv.className = 'typing-indicator';
@@ -147,6 +228,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return typingDiv;
     }
     
+    // Add error message
     function addErrorMessage() {
         const messageDiv = document.createElement('div');
         messageDiv.className = 'message bot-message error-message';
@@ -157,6 +239,7 @@ document.addEventListener('DOMContentLoaded', () => {
         scrollToBottom();
     }
     
+    // Load chat history
     async function loadChatHistory() {
         try {
             const response = await fetch('/api/chat-history');
@@ -167,6 +250,9 @@ document.addEventListener('DOMContentLoaded', () => {
             const history = await response.json();
             
             if (history.length === 0) {
+                // If no history, add welcome message
+                addWelcomeMessage();
+                setupQuestionItemListeners();
                 return;
             }
             
@@ -179,13 +265,18 @@ document.addEventListener('DOMContentLoaded', () => {
             
         } catch (error) {
             console.error('Error loading chat history:', error);
+            // If error loading history, display welcome message
+            addWelcomeMessage();
+            setupQuestionItemListeners();
         }
     }
     
+    // Scroll to bottom of chat
     function scrollToBottom() {
         chatMessages.scrollTop = chatMessages.scrollHeight;
     }
     
+    // Escape HTML to prevent XSS
     function escapeHtml(unsafe) {
         return unsafe
             .replace(/&/g, "&amp;")
@@ -195,6 +286,7 @@ document.addEventListener('DOMContentLoaded', () => {
             .replace(/'/g, "&#039;");
     }
     
+    // Render markdown 
     function renderMarkdown(text) {
         marked.setOptions({
             highlight: function(code, lang) {
