@@ -74,7 +74,6 @@ python app.py
 ```
 
 * This will start the Flask app at `http://localhost:5000`.
-* If you encounter any issues with Flask, you can use the Gradio UI (below).
 
 
 ## Usage
