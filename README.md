@@ -76,13 +76,6 @@ python app.py
 * This will start the Flask app at `http://localhost:5000`.
 * If you encounter any issues with Flask, you can use the Gradio UI (below).
 
-#### Using Gradio (Alternative)
-
-```bash
-python pipeline.py
-```
-
-* This will launch a Gradio UI in your web browser. If it does not open automatically, the URL will be displayed in the terminal.
 
 ## Usage
 
