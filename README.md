@@ -10,7 +10,6 @@ RAGex is a RAG-Powered Multi-Agent Q&A Assistant that retrieves relevant informa
 * **Vector Database**: Chroma (stored in `vector_db` directory)
 * **UI Tools**:
 
-  * Gradio (pipeline.py for simple web-based chat interface)
   * Flask (app.py for a more customizable web app)
 * **Knowledge Base Data**: Text files in `knowledge-base` directory
 
