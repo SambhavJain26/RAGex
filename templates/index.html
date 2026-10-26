@@ -3,52 +3,87 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RAG Chatbot</title>
+    <title>RAGex: Enterprise Knowledge & Tool Assistant</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/atom-one-dark.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/github.min.css">
 </head>
 <body>
-    <div class="container-fluid">
-        <div class="row vh-100">
-            <div class="col-md-3 col-lg-2 sidebar">
+    <div class="container-fluid p-0">
+        <div class="row g-0 vh-100">
+            <!-- Sidebar -->
+            <div class="col-md-3 col-lg-2 sidebar d-flex flex-column">
                 <div class="sidebar-header">
-                    <h3>RAG Chatbot</h3>
+                    <div class="d-flex align-items-center gap-2 mb-2">
+                        <div class="brand-icon">
+                            <i class="fas fa-layer-group"></i>
+                        </div>
+                        <h4 class="brand-title mb-0">RAGex</h4>
+                    </div>
+                    <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1">
+                        <i class="fas fa-circle pulse-dot me-1"></i> System Online
+                    </span>
                 </div>
-                <div class="sidebar-actions">
-                    <button id="new-chat-btn" class="btn btn-primary mb-3 w-100">
-                        <i class="fas fa-plus"></i> New Chat
+
+                <div class="sidebar-actions my-3">
+                    <button id="new-chat-btn" class="btn btn-primary w-100 py-2 shadow-sm">
+                        <i class="fas fa-plus me-1"></i> New Session
                     </button>
                 </div>
-                <div class="sidebar-footer">
-                    <p class="text-center text-muted small">Powered by LangChain & Flask</p>
+
+                <!-- System Metadata Card -->
+                <div class="system-meta-card mt-2 mb-auto">
+                    <div class="meta-item">
+                        <span class="meta-label">Knowledge Base</span>
+                        <span class="meta-value">Insurellm KB (7 Docs)</span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">Vector Store</span>
+                        <span class="meta-value">ChromaDB Persistent</span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">LLM Engine</span>
+                        <span class="meta-value">OpenAI GPT-4o-mini</span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">Tool Engines</span>
+                        <span class="meta-value">SymPy + WordNet</span>
+                    </div>
+                </div>
+
+                <div class="sidebar-footer pt-3 border-top border-secondary">
+                    <p class="text-secondary small mb-1 text-center">LangChain & Flask Architecture</p>
+                    <p class="text-secondary small text-center mb-0 opacity-75">Enterprise RAG Pipeline</p>
                 </div>
             </div>
             
-            <div class="col-md-9 col-lg-10 main-content">
-                <div class="chat-container">
-                    <div id="chat-messages" class="chat-messages">
+            <!-- Main Content Area -->
+            <div class="col-md-9 col-lg-10 main-content d-flex flex-column">
+                <div class="chat-container d-flex flex-column h-100">
+                    <div id="chat-messages" class="chat-messages flex-grow-1">
                         <div class="welcome-message">
-                            <h1>Welcome to RAG Chatbot</h1>
-                            <p>Ask me anything about your knowledge base, or try one of these examples:</p>
+                            <div class="welcome-hero mb-4">
+                                <h1 class="fw-bold">RAGex Intelligence Assistant</h1>
+                                <p class="text-muted lead">Hybrid question-answering system combining semantic vector retrieval with deterministic tools.</p>
+                            </div>
                             
                             <div class="tools-grid">
                                 <div class="row row-cols-1 row-cols-md-3 g-4">
                                     <!-- RAG Pipeline Tool -->
                                     <div class="col">
-                                        <div class="card tool-card bg-light">
-                                            <div class="card-header bg-primary text-white">
-                                                <i class="fas fa-search me-2"></i> RAG Pipeline Tool
+                                        <div class="card tool-card h-100 border-0 shadow-sm">
+                                            <div class="card-header bg-primary text-white py-3">
+                                                <i class="fas fa-database me-2"></i> RAG Vector Retrieval
                                             </div>
                                             <div class="card-body">
-                                                <p class="card-text">Ask questions about your knowledge base.</p>
-                                                <ul class="example-questions">
-                                                    <li class="question-item"><i class="fas fa-question-circle rag-icon"></i>Who is Avery Lancaster?</li>
-                                                    <li class="question-item"><i class="fas fa-question-circle rag-icon"></i>Explain CarLLM in a few lines</li>
-                                                    <li class="question-item"><i class="fas fa-question-circle rag-icon"></i>What are the prices of CarLLM?</li>
-                                                    <li class="question-item"><i class="fas fa-question-circle rag-icon"></i>Tell me about InsureLLM</li>
-                                                    <li class="question-item"><i class="fas fa-question-circle rag-icon"></i>Different products of InsureLLM</li>
+                                                <p class="card-text text-muted small">Query domain documents in the Insurellm knowledge base with semantic grounding.</p>
+                                                <ul class="example-questions list-unstyled mb-0">
+                                                    <li class="question-item"><i class="fas fa-chevron-right me-2 text-primary"></i>Who is Avery Lancaster?</li>
+                                                    <li class="question-item"><i class="fas fa-chevron-right me-2 text-primary"></i>Explain Carllm in a few lines</li>
+                                                    <li class="question-item"><i class="fas fa-chevron-right me-2 text-primary"></i>What are the prices of Carllm?</li>
+                                                    <li class="question-item"><i class="fas fa-chevron-right me-2 text-primary"></i>Tell me about Insurellm</li>
+                                                    <li class="question-item"><i class="fas fa-chevron-right me-2 text-primary"></i>What is the 2025 roadmap for Carllm?</li>
                                                 </ul>
                                             </div>
                                         </div>
@@ -56,18 +91,18 @@
                                     
                                     <!-- Calculator Tool -->
                                     <div class="col">
-                                        <div class="card tool-card bg-light">
-                                            <div class="card-header bg-success text-white">
-                                                <i class="fas fa-calculator me-2"></i> Calculator Tool
+                                        <div class="card tool-card h-100 border-0 shadow-sm">
+                                            <div class="card-header bg-success text-white py-3">
+                                                <i class="fas fa-calculator me-2"></i> Deterministic Calculator
                                             </div>
                                             <div class="card-body">
-                                                <p class="card-text">Perform calculations of various types.</p>
-                                                <ul class="example-questions">
-                                                    <li class="question-item"><i class="fas fa-calculator calc-icon"></i>Calculate 3x5</li>
-                                                    <li class="question-item"><i class="fas fa-calculator calc-icon"></i>Calculate sqrt(144) + 25</li>
-                                                    <li class="question-item"><i class="fas fa-calculator calc-icon"></i>Calculate 5 feet to meters</li>
-                                                    <li class="question-item"><i class="fas fa-calculator calc-icon"></i>Calculate sin(45) + cos(30)</li>
-                                                    <li class="question-item"><i class="fas fa-calculator calc-icon"></i>Calculate 10!</li>
+                                                <p class="card-text text-muted small">Perform zero-hallucination math, algebraic equations, and unit conversions via SymPy.</p>
+                                                <ul class="example-questions list-unstyled mb-0">
+                                                    <li class="question-item"><i class="fas fa-chevron-right me-2 text-success"></i>Calculate 3x5</li>
+                                                    <li class="question-item"><i class="fas fa-chevron-right me-2 text-success"></i>Calculate sqrt(144) + 25</li>
+                                                    <li class="question-item"><i class="fas fa-chevron-right me-2 text-success"></i>Calculate 5 feet to meters</li>
+                                                    <li class="question-item"><i class="fas fa-chevron-right me-2 text-success"></i>Calculate sin(45) + cos(30)</li>
+                                                    <li class="question-item"><i class="fas fa-chevron-right me-2 text-success"></i>Calculate 10!</li>
                                                 </ul>
                                             </div>
                                         </div>
@@ -75,18 +110,18 @@
                                     
                                     <!-- Dictionary Tool -->
                                     <div class="col">
-                                        <div class="card tool-card bg-light">
-                                            <div class="card-header bg-danger text-white">
-                                                <i class="fas fa-book me-2"></i> Dictionary Tool
+                                        <div class="card tool-card h-100 border-0 shadow-sm">
+                                            <div class="card-header bg-danger text-white py-3">
+                                                <i class="fas fa-book me-2"></i> Lexical Dictionary
                                             </div>
                                             <div class="card-body">
-                                                <p class="card-text">Get definitions for words and phrases.</p>
-                                                <ul class="example-questions">
-                                                    <li class="question-item"><i class="fas fa-book dict-icon"></i>Define serendipity</li>
-                                                    <li class="question-item"><i class="fas fa-book dict-icon"></i>Define algorithm</li>
-                                                    <li class="question-item"><i class="fas fa-book dict-icon"></i>Define ephemeral</li>
-                                                    <li class="question-item"><i class="fas fa-book dict-icon"></i>Define pragmatic</li>
-                                                    <li class="question-item"><i class="fas fa-book dict-icon"></i>Define ubiquitous</li>
+                                                <p class="card-text text-muted small">Fetch lexical definitions with parts of speech, examples, and WordNet fallback.</p>
+                                                <ul class="example-questions list-unstyled mb-0">
+                                                    <li class="question-item"><i class="fas fa-chevron-right me-2 text-danger"></i>Define serendipity</li>
+                                                    <li class="question-item"><i class="fas fa-chevron-right me-2 text-danger"></i>Define algorithm</li>
+                                                    <li class="question-item"><i class="fas fa-chevron-right me-2 text-danger"></i>Define ephemeral</li>
+                                                    <li class="question-item"><i class="fas fa-chevron-right me-2 text-danger"></i>Define pragmatic</li>
+                                                    <li class="question-item"><i class="fas fa-chevron-right me-2 text-danger"></i>Define ubiquitous</li>
                                                 </ul>
                                             </div>
                                         </div>
@@ -96,11 +131,12 @@
                         </div>
                     </div>
                     
+                    <!-- Chat Input -->
                     <div class="chat-input-container">
                         <form id="chat-form" class="chat-form">
-                            <div class="input-group">
-                                <textarea id="message-input" class="form-control" placeholder="Type your message..." rows="1"></textarea>
-                                <button type="submit" class="btn btn-primary">
+                            <div class="input-group shadow-sm">
+                                <textarea id="message-input" class="form-control" placeholder="Ask a question, enter 'Calculate <math>', or 'Define <word>'..." rows="1"></textarea>
+                                <button type="submit" class="btn btn-primary px-4" id="send-btn">
                                     <i class="fas fa-paper-plane"></i>
                                 </button>
                             </div>

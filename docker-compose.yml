@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  ragex:
+    build: .
+    ports:
+      - "5000:5000"
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - SECRET_KEY=${SECRET_KEY:-dev_secret_key_change_in_production}
+      - PORT=5000
+      - FLASK_DEBUG=False
+    volumes:
+      - ./knowledge-base:/app/knowledge-base:ro
+      - vector_data:/app/vector_db
+    restart: unless-stopped
+
+volumes:
+  vector_data:

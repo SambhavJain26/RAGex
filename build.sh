@@ -1,15 +1,14 @@
 #!/usr/bin/env bash
-# Exit on error
+# Exit immediately on error
 set -o errexit
 
-# Install dependencies
+# Upgrade pip and install dependencies
 pip install --upgrade pip
 pip install -r requirements.txt
 
 mkdir -p vector_db
 
-# Download NLTK data
-python -c "import nltk; nltk.download('wordnet')"
+# Download required NLTK corpora
+python -c "import nltk; nltk.download('wordnet'); nltk.download('omw-1.4')"
 
-# Print success message
-echo "Build completed successfully!"
+echo "RAGex build completed successfully!"

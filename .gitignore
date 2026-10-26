@@ -1,4 +1,37 @@
+# Environment variables and secrets
 .env
+.env.local
+*.env
+
+# Virtual environments
+.venv/
+venv/
 ragenv/
+ENV/
+env/
+
+# Python cache and byte-compiled files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Vector database storage
 vector_db/
+
+# NLTK data
+nltk_data/
+
+# IDE and OS files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Temporary and scratch files
 new.py
+tmp/
+temp/
+*.log
