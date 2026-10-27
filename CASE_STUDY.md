@@ -1,7 +1,7 @@
-# Case Study: RAGex - Enterprise RAG Architecture with Deterministic Tool Augmentation
+# Case Study: Production RAG & Semantic Search Engine
 
 ## Project Hero
-* **Title**: RAGex: Hybrid Vector Retrieval and Deterministic Computation Engine
+* **Project Title**: Production RAG & Semantic Search Engine
 * **Subtitle**: An enterprise Question-Answering system combining dense ChromaDB vector search with SymPy symbolic algebra and a multi-tier lexical dictionary to eliminate LLM hallucinations in regulated domains.
 * **Role**: Lead Systems Architect & AI Engineer
 * **Tools & Stack**: Python 3.11, LangChain, ChromaDB, OpenAI GPT-4o-mini, SymPy, NLTK WordNet, Flask, Flask-SocketIO, Docker
